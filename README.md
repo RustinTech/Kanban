@@ -1,8 +1,8 @@
-# Orbit Kanban 🚀
+# Rustin's Kanban 🚀
 
 A premium, privacy-focused, and open-source Kanban board designed for speed and simplicity. 
 
-![Kanban Preview](https://raw.githubusercontent.com/RustinTech/Kanban/main/screenshot.png) *(Note: Add your actual screenshot link here)*
+![Kanban Preview](https://github.com/RustinTech/Kanban/blob/main/Kanban/Screenshot.png)
 
 ## ✨ Features
 
@@ -50,3 +50,4 @@ Open Source under the MIT License. Feel free to use, modify, and distribute.
 
 ---
 Built by [RustinTech](https://github.com/RustinTech)
+
