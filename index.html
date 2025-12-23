@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rustin's Kanban</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Theme */
+            --bg-body: #f3f5f9;
+            --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f3f5f9 100%);
+            --glass-panel: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --primary: #4f46e5;
+            /* Indigo */
+            --primary-glow: rgba(79, 70, 229, 0.3);
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-panel: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #818cf8;
+            --primary-glow: rgba(129, 140, 248, 0.2);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            outline: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            transition: var(--transition);
+        }
+
+        /* --- Layout Container --- */
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding-bottom: 80px;
+            /* Space for bottom tabs */
+        }
+
+        /* --- Header Section --- */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .date-badge {
+            display: inline-block;
+            padding: 0.35rem 1rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        body.dark-mode .date-badge {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Control Hub (Add Task Modal) --- */
+        .control-hub {
+            background: var(--glass-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+            box-shadow: var(--shadow-lg);
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .input-row {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-input-wrapper {
+            flex: 1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.8rem 0;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        /* Priority Toggle Design */
+        .priority-and-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .priority-selector {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px;
+            border-radius: 30px;
+            gap: 2px;
+        }
+
+        .radio-label {
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radio-label input[type="radio"] {
+            display: none;
+        }
+
+        .radio-label:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Active State Highlights */
+        .radio-label:has(input:checked) {
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            color: var(--text-primary);
+        }
+
+        .p-high:has(input:checked) {
+            color: var(--danger) !important;
+        }
+
+        .p-med:has(input:checked) {
+            color: var(--warning) !important;
+        }
+
+        .p-low:has(input:checked) {
+            color: var(--success) !important;
+        }
+
+        /* --- Redesigned Settings Card --- */
+        .settings-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%) scale(0.95);
+            width: 90%;
+            max-width: 450px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .settings-card.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .settings-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .close-settings {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .close-settings:hover {
+            color: var(--danger);
+        }
+
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.2rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        .setting-button {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        body.dark-mode .setting-button {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .setting-button:hover {
+            background: var(--bg-body);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+            border-color: var(--primary);
+        }
+
+        .setting-button .icon {
+            font-size: 1.4rem;
+        }
+
+        .setting-button .label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Donation & Support Section */
+        .support-section {
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .support-msg {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .support-msg a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .support-msg a:hover {
+            text-decoration: underline;
+        }
+
+        .bmac-btn:hover {
+            background: #FFDD00 !important;
+            border-color: #FFDD00;
+        }
+
+        .bmac-btn:hover .label {
+            color: #000000;
+        }
+
+        .kofi-btn:hover {
+            background: #ff5e5b !important;
+            border-color: #ff5e5b;
+        }
+
+        .kofi-btn:hover .label {
+            color: #ffffff;
+        }
+
+        .setting-button.bmac-btn,
+        .setting-button.kofi-btn {
+            text-decoration: none;
+        }
+
+        /* --- Kanban Board Grid --- */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .column {
+            background: var(--glass-panel);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 500px;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+
+        .col-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        .h-todo {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .h-progress {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .h-done {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .count-bubble {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .task-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0.5rem 0;
+            overflow-y: auto;
+        }
+
+        /* --- Task Cards --- */
+        .task-card {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            cursor: grab;
+            position: relative;
+            border-left: 4px solid transparent;
+            transition: var(--transition);
+            animation: slideIn 0.3s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+        .task-card.p-High {
+            border-left-color: var(--danger);
+        }
+
+        .task-card.p-Medium {
+            border-left-color: var(--warning);
+        }
+
+        .task-card.p-Low {
+            border-left-color: var(--success);
+        }
+
+        .task-body {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .delete-icon {
+            opacity: 0;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: 0.2s;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .task-card:hover .delete-icon {
+            opacity: 1;
+        }
+
+        /* --- Bottom Tabs (Dock Style) --- */
+        .tabs-dock {
+            position: fixed;
+            bottom: 20px;
+            background: var(--card-bg);
+            padding: 0.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 100;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-item {
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-item:hover {
+            background: var(--bg-body);
+            color: var(--text-primary);
+        }
+
+        .tab-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px var(--primary-glow);
+        }
+
+        .tab-close {
+            font-size: 1.1rem;
+            line-height: 0;
+            opacity: 0.6;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+        .new-tab-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-primary);
+            border: none;
+            font-size: 1.2rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .board-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .priority-and-actions {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .priority-selector {
+                justify-content: space-around;
+            }
+        }
+
+        /* --- New Features: Modal & Floating Actions --- */
+        .settings-btn {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: var(--glass-panel);
+            border: 1px solid var(--glass-border);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            z-index: 500;
+        }
+
+        .settings-btn:hover {
+            transform: rotate(45deg);
+            background: var(--card-bg);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .control-hub {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%) scale(0.95);
+            width: 90%;
+            max-width: 500px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+            margin: 0;
+            /* Overwrite previous styles if needed, though class reuse helps */
+        }
+
+        .control-hub.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Adjust action menu for top right */
+        .top-actions-wrapper {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            /* Align dropdown to right */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1 id="welcome-text">Loading Kanban...</h1>
+            <div class="date-badge" id="date-display">...</div>
+        </header>
+
+        <!-- Top Right Settings Icon -->
+        <div class="top-actions-wrapper">
+            <button class="settings-btn" title="Settings">⚙️</button>
+        </div>
+        <input type="file" id="fileInput" hidden>
+
+        <!-- Modals -->
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+
+        <!-- Add Task Modal -->
+        <div class="control-hub" id="addTaskModal">
+            <div class="input-row">
+                <div class="main-input-wrapper">
+                    <input type="text" id="taskInput" placeholder="What needs to be done?">
+                </div>
+            </div>
+
+            <div class="priority-and-actions">
+                <div class="priority-selector">
+                    <label class="radio-label p-low" title="Low">
+                        <input type="radio" name="prio" value="Low"> Low
+                    </label>
+                    <label class="radio-label p-med" title="Medium">
+                        <input type="radio" name="prio" value="Medium" checked> Med
+                    </label>
+                    <label class="radio-label p-high" title="High">
+                        <input type="radio" name="prio" value="High"> High
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redesigned Settings Modal -->
+        <div class="settings-card" id="settingsModal">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button class="close-settings" id="closeSettingsBtn" title="Close">✕</button>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">Board Management</div>
+                <div class="settings-grid">
+                    <button class="setting-button" id="newBoardBtn" title="New Board">
+                        <span class="icon">➕</span>
+                        <span class="label">New Board</span>
+                    </button>
+                    <button class="setting-button" id="deleteBoardBtn" title="Delete Active Board">
+                        <span class="icon">🗑️</span>
+                        <span class="label">Delete Board</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">Board Maintenance</div>
+                <div class="settings-grid">
+                    <button class="setting-button" id="clearAllBtn" title="Clear All Tasks">
+                        <span class="icon">🧹</span>
+                        <span class="label">Clear Tasks</span>
+                    </button>
+                    <button class="setting-button" id="toggleThemeBtn" title="Toggle Dark/Light Mode">
+                        <span class="icon">🌗</span>
+                        <span class="label">Toggle Theme</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">Data & Backup</div>
+                <div class="settings-grid">
+                    <button class="setting-button" id="exportBtn" title="Export Data to JSON">
+                        <span class="icon">💾</span>
+                        <span class="label">Export Data</span>
+                    </button>
+                    <button class="setting-button" id="importTrigger" title="Import Data from JSON">
+                        <span class="icon">📂</span>
+                        <span class="label">Import Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section support-section">
+                <div class="section-title">Support & Project</div>
+                <p class="support-msg">This app is ads and tracking free and <a
+                        href="https://github.com/RustinTech/Kanban" target="_blank">OpenSource</a>. If you like this
+                    project, you can support me!</p>
+                <div class="settings-grid">
+                    <a href="https://buymeacoffee.com/rustin" target="_blank" class="setting-button bmac-btn">
+                        <span class="icon">☕</span>
+                        <span class="label">Buy Me Coffee</span>
+                    </a>
+                    <a href="https://ko-fi.com/rustin" target="_blank" class="setting-button kofi-btn">
+                        <span class="icon">❤️</span>
+                        <span class="label">Ko-fi</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Board Name Modal (For New & Rename) -->
+        <div class="control-hub" id="nameModal">
+            <div class="input-row">
+                <div class="main-input-wrapper">
+                    <input type="text" id="nameInput" placeholder="Enter board name...">
+                </div>
+            </div>
+        </div>
+
+        <div class="board-grid">
+            <div class="column">
+                <div class="col-header h-todo">
+                    To Do <span class="count-bubble" id="count-todo">0</span>
+                </div>
+                <div class="task-list" id="todo"></div>
+            </div>
+
+            <div class="column">
+                <div class="col-header h-progress">
+                    In Progress <span class="count-bubble" id="count-inprogress">0</span>
+                </div>
+                <div class="task-list" id="inprogress"></div>
+            </div>
+
+            <div class="column">
+                <div class="col-header h-done">
+                    Done <span class="count-bubble" id="count-done">0</span>
+                </div>
+                <div class="task-list" id="done"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs-dock" id="tabs-container"></div>
+
+    <script>
+        // --- State & Config ---
+        const quotes = ["Make it happen.", "Focus on the now.", "One step at a time.", "Deep work mode: On.", "Build consistency."];
+        let boards = [];
+        let activeBoardId = 1;
+        let editingTaskId = null;
+        let lastPriority = 'Medium';
+        let history = []; // Stack to store deep copies of 'boards' for undo
+
+        // --- Initialization ---
+        async function initData() {
+            return new Promise((resolve) => {
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    chrome.storage.local.get(['orbit_boards', 'orbit_active', 'orbit_theme', 'lastPriority'], (result) => {
+                        boards = result.orbit_boards || [{ id: 1, name: "My Board", tasks: [] }];
+                        activeBoardId = parseInt(result.orbit_active) || 1;
+                        lastPriority = result.lastPriority || 'Medium';
+                        if (result.orbit_theme === 'dark') document.body.classList.add('dark-mode');
+                        resolve();
+                    });
+                } else {
+                    // Fallback to localStorage for web testing
+                    boards = JSON.parse(localStorage.getItem('orbit_boards')) || [{ id: 1, name: "My Board", tasks: [] }];
+                    activeBoardId = parseInt(localStorage.getItem('orbit_active')) || 1;
+                    lastPriority = localStorage.getItem('lastPriority') || 'Medium';
+                    if (localStorage.getItem('orbit_theme') === 'dark') document.body.classList.add('dark-mode');
+                    resolve();
+                }
+            });
+        }
+
+        window.onload = async () => {
+            await initData();
+            setupUI();
+            renderTabs();
+            renderBoard();
+
+            // Double click anywhere to open add task modal
+            document.body.ondblclick = (e) => {
+                // Ignore if clicking inside interactive elements
+                if (e.target.closest('.task-card') ||
+                    e.target.closest('button') ||
+                    e.target.closest('input') ||
+                    e.target.closest('.settings-btn') ||
+                    e.target.closest('.action-dropdown') ||
+                    e.target.closest('.tab-item')) {
+
+                    if (e.target.closest('#addTaskModal')) return;
+                    return;
+                }
+                if (document.getElementById('addTaskModal').contains(e.target)) return;
+                openModal();
+            };
+        };
+
+        // --- Modal Logic ---
+        function openModal(isEdit = false) {
+            if (!isEdit) {
+                editingTaskId = null;
+                document.getElementById('taskInput').value = '';
+                const radios = document.getElementsByName('prio');
+                for (let r of radios) r.checked = (r.value === lastPriority);
+            }
+
+            document.getElementById('modalBackdrop').classList.add('active');
+            document.getElementById('addTaskModal').classList.add('active');
+            setTimeout(() => document.getElementById('taskInput').focus(), 100);
+        }
+
+        function openSettings() {
+            document.getElementById('modalBackdrop').classList.add('active');
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modalBackdrop').classList.remove('active');
+            document.getElementById('addTaskModal').classList.remove('active');
+            document.getElementById('settingsModal').classList.remove('active');
+            document.getElementById('nameModal').classList.remove('active');
+        }
+
+        let pendingNameAction = null; // Store function to call after name input
+
+        function openNameModal(placeholder, callback) {
+            const modal = document.getElementById('nameModal');
+            const input = document.getElementById('nameInput');
+            input.placeholder = placeholder;
+            input.value = '';
+            pendingNameAction = callback;
+
+            document.getElementById('modalBackdrop').classList.add('active');
+            modal.classList.add('active');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function handleNameSubmit() {
+            const input = document.getElementById('nameInput');
+            const name = input.value.trim();
+            if (name && pendingNameAction) {
+                pendingNameAction(name);
+                closeModal();
+            }
+        }
+
+        function setupUI() {
+            // Random Quote
+            document.getElementById('welcome-text').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+            // Date
+            const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('date-display').innerText = new Date().toLocaleDateString('en-US', opts);
+        }
+
+        // --- Core Logic ---
+        function pushToHistory() {
+            // Keep last 30 states
+            if (history.length >= 30) history.shift();
+            history.push(JSON.parse(JSON.stringify(boards)));
+        }
+
+        function undo() {
+            if (history.length === 0) return;
+            const lastState = history.pop();
+            boards = lastState;
+            // Ensure activeBoardId still exists
+            if (!boards.find(b => b.id === activeBoardId)) {
+                activeBoardId = boards[0]?.id || 1;
+            }
+            saveAndRender();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') addTask();
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const radios = document.getElementsByName('prio');
+            let priority = 'Medium';
+            for (let r of radios) if (r.checked) priority = r.value;
+            lastPriority = priority;
+
+            const board = getActiveBoard();
+            pushToHistory();
+
+            if (editingTaskId) {
+                const task = board.tasks.find(t => t.id === editingTaskId);
+                if (task) {
+                    task.text = text;
+                    task.priority = priority;
+                }
+            } else {
+                board.tasks.push({
+                    id: Date.now(),
+                    text: text,
+                    priority: priority,
+                    status: 'todo',
+                    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+            }
+
+            input.value = '';
+            saveAndRender();
+            closeModal();
+        }
+
+        function editTask(id) {
+            const board = getActiveBoard();
+            const task = board.tasks.find(t => t.id === id);
+            if (!task) return;
+
+            editingTaskId = task.id;
+            document.getElementById('taskInput').value = task.text;
+
+            const radios = document.getElementsByName('prio');
+            for (let r of radios) {
+                if (r.value === task.priority) r.checked = true;
+            }
+
+            openModal(true);
+        }
+
+        function getActiveBoard() {
+            let board = boards.find(b => b.id === activeBoardId);
+            if (!board) {
+                if (boards.length > 0) {
+                    activeBoardId = boards[0].id;
+                    return boards[0];
+                } else {
+                    addNewBoard("Main Board");
+                    return boards[0];
+                }
+            }
+            return board;
+        }
+
+        // --- Rendering ---
+        function renderBoard() {
+            const board = getActiveBoard();
+            if (!board) return;
+
+            const cols = ['todo', 'inprogress', 'done'];
+
+            cols.forEach(status => {
+                const list = document.getElementById(status);
+                list.innerHTML = '';
+
+                const tasks = board.tasks.filter(t => t.status === status);
+                document.getElementById(`count-${status}`).innerText = tasks.length;
+
+                tasks.forEach(t => {
+                    const card = document.createElement('div');
+                    card.className = `task-card p-${t.priority}`;
+                    card.draggable = true;
+                    card.dataset.id = t.id;
+
+                    card.ondragstart = (e) => {
+                        e.dataTransfer.setData("text/plain", t.id);
+                        e.dataTransfer.effectAllowed = "move";
+                        card.classList.add('dragging');
+                    };
+                    card.ondragend = (e) => {
+                        card.classList.remove('dragging');
+                        document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+                    };
+
+                    card.ondblclick = (e) => {
+                        e.stopPropagation();
+                        editTask(t.id);
+                    };
+
+                    card.innerHTML = `
+                        <div class="delete-icon" data-id="${t.id}">×</div>
+                        <div class="task-body">${t.text}</div>
+                        <div class="task-meta">
+                            <span>Added: ${t.date}</span>
+                        </div>
+                    `;
+
+                    // Add click listener to delete icon (since inline onclick is bad for extensions)
+                    card.querySelector('.delete-icon').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteTask(t.id);
+                    });
+
+                    list.appendChild(card);
+                });
+            });
+        }
+
+        function renderTabs() {
+            const dock = document.getElementById('tabs-container');
+            dock.innerHTML = '';
+
+            boards.forEach(b => {
+                const tab = document.createElement('div');
+                tab.className = `tab-item ${b.id === activeBoardId ? 'active' : ''}`;
+                tab.onclick = () => { activeBoardId = b.id; saveAndRender(); };
+                tab.innerHTML = `
+                    ${b.name}
+                    <span class="tab-close" data-id="${b.id}">×</span>
+                `;
+
+                tab.ondblclick = (e) => {
+                    e.stopPropagation();
+                    openNameModal("Rename Board:", (newName) => {
+                        pushToHistory();
+                        b.name = newName;
+                        saveAndRender();
+                    });
+                };
+
+                tab.querySelector('.tab-close').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeBoard(e, b.id);
+                });
+
+                dock.appendChild(tab);
+            });
+
+            const addBtn = document.createElement('button');
+            addBtn.className = 'new-tab-btn';
+            addBtn.innerText = '+';
+            addBtn.onclick = () => openNameModal("New Board Name?", (name) => addNewBoard(name));
+            dock.appendChild(addBtn);
+        }
+
+        // --- Board Management ---
+        function addNewBoard(name) {
+            if (name) {
+                pushToHistory();
+                const newId = Date.now();
+                boards.push({ id: newId, name: name, tasks: [] });
+                activeBoardId = newId;
+                saveAndRender();
+            }
+        }
+
+        function removeBoard(e, id) {
+            if (boards.length <= 1) return alert("You must have at least one board.");
+            if (confirm(`Delete board? This cannot be undone.`)) {
+                pushToHistory();
+                boards = boards.filter(b => b.id !== id);
+                if (activeBoardId === id) activeBoardId = boards[0].id;
+                saveAndRender();
+            }
+        }
+
+        function deleteActiveBoard() {
+            if (boards.length <= 1) return alert("You must have at least one board.");
+            if (confirm("Delete the CURRENT board? This cannot be undone.")) {
+                pushToHistory();
+                boards = boards.filter(b => b.id !== activeBoardId);
+                activeBoardId = boards[0].id;
+                saveAndRender();
+            }
+        }
+
+        function deleteTask(id) {
+            pushToHistory();
+            const board = getActiveBoard();
+            board.tasks = board.tasks.filter(t => t.id !== id);
+            saveAndRender();
+        }
+
+        function clearBoard() {
+            if (confirm("Clear all tasks on this board? This cannot be undone.")) {
+                pushToHistory();
+                getActiveBoard().tasks = [];
+                saveAndRender();
+            }
+        }
+
+
+        // --- Drag & Drop Reordering ---
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const id = parseInt(e.dataTransfer.getData("text/plain"));
+            const board = getActiveBoard();
+
+            const taskIndex = board.tasks.findIndex(t => t.id === id);
+            if (taskIndex === -1) return;
+            const task = board.tasks[taskIndex];
+
+            const list = e.target.closest('.task-list');
+            if (!list) return;
+
+            const newStatus = list.id;
+            const afterElement = getDragAfterElement(list, e.clientY);
+
+            pushToHistory();
+            board.tasks.splice(taskIndex, 1);
+            task.status = newStatus;
+
+            if (afterElement == null) {
+                board.tasks.push(task);
+            } else {
+                const afterId = parseInt(afterElement.dataset.id);
+                const afterIndex = board.tasks.findIndex(t => t.id === afterId);
+                board.tasks.splice(afterIndex, 0, task);
+            }
+
+            saveAndRender();
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.task-card:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // --- Persistence & Theme ---
+        function saveAndRender() {
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                chrome.storage.local.set({
+                    orbit_boards: boards,
+                    orbit_active: activeBoardId,
+                    lastPriority: lastPriority
+                });
+            } else {
+                localStorage.setItem('orbit_boards', JSON.stringify(boards));
+                localStorage.setItem('orbit_active', activeBoardId);
+                localStorage.setItem('lastPriority', lastPriority);
+            }
+            renderTabs();
+            renderBoard();
+        }
+
+        function exportData() {
+            const data = JSON.stringify(boards, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'orbit_kanban_backup.json';
+            link.click();
+        }
+
+        function importData(input) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    boards = JSON.parse(e.target.result);
+                    if (boards.length > 0) activeBoardId = boards[0].id;
+                    saveAndRender();
+                    alert("Import successful! Board data has been loaded.");
+                } catch (err) { alert("Invalid file format. Please use a valid JSON backup."); }
+                input.value = '';
+            };
+            reader.readAsText(input.files[0]);
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                chrome.storage.local.set({ orbit_theme: theme });
+            } else {
+                localStorage.setItem('orbit_theme', theme);
+            }
+        }
+
+        // --- Keyboard Shortcuts ---
+        document.addEventListener('keydown', (e) => {
+            const isModalOpen = document.getElementById('modalBackdrop').classList.contains('active');
+            const isAddingTask = document.getElementById('addTaskModal').classList.contains('active');
+            const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+
+            // Shortcut 'n' for New Task
+            if (e.key.toLowerCase() === 'n' && !isModalOpen && !isTyping) {
+                e.preventDefault();
+                openModal();
+            }
+
+            // Shortcut 'b' for New Board
+            if (e.key.toLowerCase() === 'b' && !isModalOpen && !isTyping) {
+                e.preventDefault();
+                openNameModal("New Board Name?", (name) => addNewBoard(name));
+            }
+
+            // Shortcut 's' for Settings
+            if (e.key.toLowerCase() === 's' && !isModalOpen && !isTyping) {
+                e.preventDefault();
+                openSettings();
+            }
+
+            // Shortcut 'Esc' for Closing Modals
+            if (e.key === 'Escape' && isModalOpen) {
+                e.preventDefault();
+                closeModal();
+            }
+
+            // Shortcut Ctrl+Z for Undo
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                if (!isTyping) {
+                    e.preventDefault();
+                    undo();
+                }
+            }
+
+            // Shortcut 'Tab'
+            if (e.key === 'Tab') {
+                if (isAddingTask) {
+                    // Cycle Priority in Add Task Modal
+                    e.preventDefault();
+                    const priorities = ['Low', 'Medium', 'High'];
+                    const radios = document.getElementsByName('prio');
+                    let currentIndex = priorities.indexOf(lastPriority);
+                    let nextIndex = (currentIndex + 1) % priorities.length;
+                    let nextPriority = priorities[nextIndex];
+
+                    for (let r of radios) {
+                        if (r.value === nextPriority) {
+                            r.checked = true;
+                            lastPriority = nextPriority;
+                            break;
+                        }
+                    }
+                } else if (!isModalOpen && !isTyping) {
+                    // Cycle Boards globally
+                    e.preventDefault();
+                    if (boards.length > 1) {
+                        const currentIndex = boards.findIndex(b => b.id === activeBoardId);
+                        const nextIndex = (currentIndex + 1) % boards.length;
+                        activeBoardId = boards[nextIndex].id;
+                        saveAndRender();
+                    }
+                }
+            }
+        });
+
+        // --- High-level Event Listeners for Extension compatibility ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const settingsBtn = document.querySelector('.settings-btn');
+            if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
+
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            if (clearAllBtn) clearAllBtn.addEventListener('click', () => { clearBoard(); closeModal(); });
+
+            const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+            if (toggleThemeBtn) toggleThemeBtn.addEventListener('click', () => { toggleTheme(); closeModal(); });
+
+            const exportBtn = document.getElementById('exportBtn');
+            if (exportBtn) exportBtn.addEventListener('click', () => { exportData(); closeModal(); });
+
+            const importTrigger = document.getElementById('importTrigger');
+            if (importTrigger) importTrigger.addEventListener('click', () => document.getElementById('fileInput').click());
+
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) fileInput.addEventListener('change', (e) => importData(e.target));
+
+            const nameInput = document.getElementById('nameInput');
+            if (nameInput) nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleNameSubmit();
+            });
+
+            const taskInput = document.getElementById('taskInput');
+            if (taskInput) taskInput.addEventListener('keypress', handleEnter);
+
+            const modalBackdrop = document.getElementById('modalBackdrop');
+            if (modalBackdrop) modalBackdrop.addEventListener('click', closeModal);
+
+            const newBoardBtn = document.getElementById('newBoardBtn');
+            if (newBoardBtn) newBoardBtn.addEventListener('click', () => {
+                closeModal();
+                openNameModal("New Board Name?", (name) => addNewBoard(name));
+            });
+
+            const deleteBoardBtn = document.getElementById('deleteBoardBtn');
+            if (deleteBoardBtn) deleteBoardBtn.addEventListener('click', () => {
+                closeModal();
+                deleteActiveBoard();
+            });
+
+            const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+            if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeModal);
+
+            const taskLists = document.querySelectorAll('.task-list');
+            taskLists.forEach(list => {
+                list.addEventListener('dragover', allowDrop);
+                list.addEventListener('drop', drop);
+            });
+        });
+    </script>
+</body>
+
+</html>

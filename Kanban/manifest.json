@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Rustin's Kanban",
+  "version": "1.0",
+  "description": "A beautiful, offline-capable Kanban board for your daily tasks.",
+  "permissions": [
+    "storage"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "icons": {
+    "128": "icon128.png"
+  },
+  "offline_enabled": true
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rustin's Kanban</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1 id="welcome-text">Loading Kanban...</h1>
+            <div class="date-badge" id="date-display">...</div>
+        </header>
+
+        <!-- Top Right Settings Icon -->
+        <div class="top-actions-wrapper">
+            <button class="settings-btn" title="Settings">⚙️</button>
+        </div>
+        <input type="file" id="fileInput" hidden>
+
+        <!-- Modals -->
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+
+        <!-- Add Task Modal -->
+        <div class="control-hub" id="addTaskModal">
+            <div class="input-row">
+                <div class="main-input-wrapper">
+                    <input type="text" id="taskInput" placeholder="What needs to be done?">
+                </div>
+            </div>
+
+            <div class="priority-and-actions">
+                <div class="priority-selector">
+                    <label class="radio-label p-low" title="Low">
+                        <input type="radio" name="prio" value="Low"> Low
+                    </label>
+                    <label class="radio-label p-med" title="Medium">
+                        <input type="radio" name="prio" value="Medium" checked> Med
+                    </label>
+                    <label class="radio-label p-high" title="High">
+                        <input type="radio" name="prio" value="High"> High
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redesigned Settings Modal -->
+        <div class="settings-card" id="settingsModal">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button class="close-settings" id="closeSettingsBtn" title="Close">✕</button>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">Board Management</div>
+                <div class="settings-grid">
+                    <button class="setting-button" id="newBoardBtn" title="New Board">
+                        <span class="icon">➕</span>
+                        <span class="label">New Board</span>
+                    </button>
+                    <button class="setting-button" id="deleteBoardBtn" title="Delete Active Board">
+                        <span class="icon">🗑️</span>
+                        <span class="label">Delete Board</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">Board Maintenance</div>
+                <div class="settings-grid">
+                    <button class="setting-button" id="clearAllBtn" title="Clear All Tasks">
+                        <span class="icon">🧹</span>
+                        <span class="label">Clear Tasks</span>
+                    </button>
+                    <button class="setting-button" id="toggleThemeBtn" title="Toggle Dark/Light Mode">
+                        <span class="icon">🌗</span>
+                        <span class="label">Toggle Theme</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="section-title">Data & Backup</div>
+                <div class="settings-grid">
+                    <button class="setting-button" id="exportBtn" title="Export Data to JSON">
+                        <span class="icon">💾</span>
+                        <span class="label">Export Data</span>
+                    </button>
+                    <button class="setting-button" id="importTrigger" title="Import Data from JSON">
+                        <span class="icon">📂</span>
+                        <span class="label">Import Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section support-section">
+                <div class="section-title">Support & Project</div>
+                <p class="support-msg">This app is ads and tracking free and <a
+                        href="https://github.com/RustinTech/Kanban" target="_blank">OpenSource</a>. If you like this
+                    project, you can support me!</p>
+                <div class="settings-grid">
+                    <a href="https://buymeacoffee.com/rustin" target="_blank" class="setting-button bmac-btn">
+                        <span class="icon">☕</span>
+                        <span class="label">Buy Me Coffee</span>
+                    </a>
+                    <a href="https://ko-fi.com/rustin" target="_blank" class="setting-button kofi-btn">
+                        <span class="icon">❤️</span>
+                        <span class="label">Ko-fi</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Board Name Modal (For New & Rename) -->
+        <div class="control-hub" id="nameModal">
+            <div class="input-row">
+                <div class="main-input-wrapper">
+                    <input type="text" id="nameInput" placeholder="Enter board name...">
+                </div>
+            </div>
+        </div>
+
+        <div class="board-grid">
+            <div class="column">
+                <div class="col-header h-todo">
+                    To Do <span class="count-bubble" id="count-todo">0</span>
+                </div>
+                <div class="task-list" id="todo"></div>
+            </div>
+
+            <div class="column">
+                <div class="col-header h-progress">
+                    In Progress <span class="count-bubble" id="count-inprogress">0</span>
+                </div>
+                <div class="task-list" id="inprogress"></div>
+            </div>
+
+            <div class="column">
+                <div class="col-header h-done">
+                    Done <span class="count-bubble" id="count-done">0</span>
+                </div>
+                <div class="task-list" id="done"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs-dock" id="tabs-container"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
